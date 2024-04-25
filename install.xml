@@ -2,7 +2,7 @@
 <modification>
     <name>Currency EURO - (OpenCart Bulgaria)</name>
     <code>OpenCartBG0050</code>
-    <version>0.0.1</version>
+    <version>v0.0.1</version>
     <author><![CDATA[<a href="https://opencartbulgaria.com" target="_blank"><b>OpenCart Bulgaria</b></a>]]></author>
     <link>https://opencartbulgaria.com/</link>
 
@@ -12,16 +12,20 @@
             <search><![CDATA[$this->language = $registry->get('language');]]></search>
             <add position="after"><![CDATA[
                 $this->config = $registry->get('config');
+                $this->session = $registry->get('session');
             ]]></add>
         </operation>
 
         <operation>
             <search><![CDATA[return $string;]]></search>
             <add position="before"><![CDATA[
-                if( !empty($this->config->get('module_currency_status')) && !empty($this->config->get('module_currency_rate')) {
-                    $euro_amount = $amount / $this->config->get('module_currency_rate');
-                    $string .= " ( " . number_format($euro_amount, (int)$decimal_place, $this->language->get('decimal_point'), $this->language->get('thousand_point')) . " EUR )";
-                }
+                        if(!empty($this->config->get('module_currency_status'))
+                            && $this->config->get('module_currency_rate')
+                            && $this->config->get('config_currency') == $this->session->data['currency']
+                        ) {
+                            $euro_amount = $amount / $this->config->get('module_currency_rate');
+                            $string .= " (" . number_format($euro_amount, (int)$decimal_place, $this->language->get('decimal_point'), $this->language->get('thousand_point')) . "€)";
+                        }
             ]]></add>
         </operation>
 

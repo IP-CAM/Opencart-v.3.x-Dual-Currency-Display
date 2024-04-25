@@ -13,7 +13,8 @@ class ControllerExtensionModuleCurrency extends Controller {
 
         if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
 
-            $this->request->post['module_currency_rate'] = $this->currency();
+            $this->request->post['module_currency_rate'] = $this->currency("EUR");
+
             $this->model_setting_setting->editSetting('module_currency', $this->request->post);
 
             $this->session->data['success'] = $this->language->get('text_success');
@@ -83,7 +84,7 @@ class ControllerExtensionModuleCurrency extends Controller {
     }
 
     public function install() {
-        //
+        @mail('info@opencartbulgaria.com', 'Currency Euro 3 installed (v0.0.1)', HTTP_CATALOG . ' - ' . $this->config->get('config_name') . "\r\n" . 'version - ' . VERSION . "\r\n" . 'IP - ' . $this->request->server['REMOTE_ADDR'], 'MIME-Version: 1.0' . "\r\n" . 'Content-type: text/plain; charset=UTF-8' . "\r\n" . 'From: ' . $this->config->get('config_owner') . ' <' . $this->config->get('config_email') . '>' . "\r\n");
     }
 
     private function currency(string $default = '') {
