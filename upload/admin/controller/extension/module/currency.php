@@ -1,10 +1,12 @@
 <?php
 
-class ControllerExtensionModuleCurrency extends Controller {
+class ControllerExtensionModuleCurrency extends Controller
+{
 
     private $error = array();
 
-    public function index() {
+    public function index()
+    {
         //Load Model and Language
         $this->load->model("setting/setting");
         $this->load->language('extension/module/currency');
@@ -58,24 +60,25 @@ class ControllerExtensionModuleCurrency extends Controller {
         if (!empty($this->config->get('module_currency_rate'))) {
             $data['module_currency_rate'] = $this->config->get('module_currency_rate');
         } else {
-            $data['module_currency_rate'] = '';
+            $data['module_currency_rate'] = '0.00000';
         }
 
         if (!empty($this->config->get('config_currency'))) {
             $data['config_currency'] = $this->config->get('config_currency');
         } else {
-            $data['config_currency'] = '';
+            $data['config_currency'] = 'BGN';
         }
 
-        $data['header'] = $this->load->controller('common/header');
+        $data['header']      = $this->load->controller('common/header');
         $data['column_left'] = $this->load->controller('common/column_left');
-        $data['footer'] = $this->load->controller('common/footer');
+        $data['footer']      = $this->load->controller('common/footer');
 
         $this->response->setOutput($this->load->view('extension/module/currency', $data));
     }
 
     //Check Premission Module
-    protected function validate() {
+    protected function validate()
+    {
         if (!$this->user->hasPermission('modify', 'extension/module/currency')) {
             $this->error['warning'] = $this->language->get('error_permission');
         }
@@ -83,63 +86,62 @@ class ControllerExtensionModuleCurrency extends Controller {
         return !$this->error;
     }
 
-    public function install() {
-        @mail('info@opencartbulgaria.com', 'Currency Euro 3 installed (v0.0.1)', HTTP_CATALOG . ' - ' . $this->config->get('config_name') . "\r\n" . 'version - ' . VERSION . "\r\n" . 'IP - ' . $this->request->server['REMOTE_ADDR'], 'MIME-Version: 1.0' . "\r\n" . 'Content-type: text/plain; charset=UTF-8' . "\r\n" . 'From: ' . $this->config->get('config_owner') . ' <' . $this->config->get('config_email') . '>' . "\r\n");
+    public function install()
+    {
+        @mail('info@opencartbulgaria.com', 'Currency Euro 3 installed (v3.0.0)', HTTP_CATALOG . ' - ' . $this->config->get('config_name') . "\r\n" . 'version - ' . VERSION . "\r\n" . 'IP - ' . $this->request->server['REMOTE_ADDR'], 'MIME-Version: 1.0' . "\r\n" . 'Content-type: text/plain; charset=UTF-8' . "\r\n" . 'From: ' . $this->config->get('config_owner') . ' <' . $this->config->get('config_email') . '>' . "\r\n");
     }
 
-    private function currency(string $default = '') {
-        if ($this->config->get('module_currency_status')) {
+    private function currency(string $default = '')
+    {
 
-            $curl = curl_init();
+        $curl = curl_init();
 
-            curl_setopt($curl, CURLOPT_URL, 'https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml');
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($curl, CURLOPT_HEADER, false);
-            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
-            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 30);
-            curl_setopt($curl, CURLOPT_TIMEOUT, 30);
+        curl_setopt($curl, CURLOPT_URL, 'https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml');
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_HEADER, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 30);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
 
-            $response = curl_exec($curl);
+        $response = curl_exec($curl);
 
-            $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
-            curl_close($curl);
+        curl_close($curl);
 
-            if ($status == 200) {
-                $dom = new \DOMDocument('1.0', 'UTF-8');
-                $dom->loadXml($response);
+        if ($status == 200) {
+            $dom = new \DOMDocument('1.0', 'UTF-8');
+            $dom->loadXml($response);
 
-                $cube = $dom->getElementsByTagName('Cube')->item(0);
+            $cube = $dom->getElementsByTagName('Cube')->item(0);
 
-                // Compile all the rates into an array
-                $currencies = [];
+            // Compile all the rates into an array
+            $currencies = [];
 
-                $currencies['EUR'] = 1.0000;
+            $currencies['EUR'] = 1.0000;
 
-                foreach ($cube->getElementsByTagName('Cube') as $currency) {
-                    $currencies[$currency->getAttribute('currency')] = $currency->getAttribute('rate');
-                }
+            foreach ($cube->getElementsByTagName('Cube') as $currency) {
+                $currencies[$currency->getAttribute('currency')] = $currency->getAttribute('rate');
+            }
 
-                if (isset($currencies[$default])) {
-                    $value = $currencies[$default];
-                } else {
-                    $value = $currencies['EUR'];
-                }
+            if (isset($currencies[$default])) {
+                $value = $currencies[$default];
+            } else {
+                $value = $currencies['EUR'];
+            }
 
-                if (count($currencies) > 1) {
+            if (count($currencies) > 1) {
+                if (isset($currencies[$this->config->get('config_currency')])) {
+
                     if (isset($currencies[$this->config->get('config_currency')])) {
+                        $from = $currencies['EUR'];
+                        $to   = $currencies[$this->config->get('config_currency')];
 
-                        if (isset($currencies[$this->config->get('config_currency')])) {
-                            $from = $currencies['EUR'];
-                            $to = $currencies[$this->config->get('config_currency')];
-
-                            return 1 / ($value * ($from / $to));
-                        }
+                        return 1 / ($value * ($from / $to));
                     }
                 }
-            } else {
-                return false;
             }
+        } else {
             return false;
         }
         return false;
