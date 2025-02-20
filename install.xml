@@ -12,7 +12,6 @@
             <search><![CDATA[$this->language = $registry->get('language');]]></search>
             <add position="after"><![CDATA[
                 $this->config = $registry->get('config');
-                $this->session = $registry->get('session');
             ]]></add>
         </operation>
 
@@ -21,7 +20,7 @@
             <add position="before"><![CDATA[
                         if(!empty($this->config->get('module_currency_status'))
                             && $this->config->get('module_currency_rate')
-                            && $this->config->get('config_currency') == $this->session->data['currency']
+                            && $this->config->get('config_currency') == $currency
                         ) {
                             $euro_amount = $amount / $this->config->get('module_currency_rate');
                             $string .= " (" . number_format($euro_amount, (int)$decimal_place, $this->language->get('decimal_point'), $this->language->get('thousand_point')) . "€)";
